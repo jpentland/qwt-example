@@ -1,9 +1,11 @@
 #include "window.h"
+#include "adc.h"
+#include "ledout.h"
 
-#include <cmath>  // for sine stuff
-
-
-Window::Window() : plot( QString("Example Plot") ), gain(5), count(0) // <-- 'c++ initialisation list' - google it!
+Window::Window() 
+	: plot( QString("Volumeter - Volume Graph")), 
+	  gain(5), 
+	  count(0) 
 {
 	// set up the gain knob
 	knob.setValue(gain);
@@ -22,7 +24,7 @@ Window::Window() : plot( QString("Example Plot") ), gain(5), count(0) // <-- 'c+
 	for( int index=0; index<plotDataSize; ++index )
 	{
 		xData[index] = index;
-		yData[index] = gain * sin( M_PI * index/50 );
+		yData[index] = 0;
 	}
 
 	// make a plot curve from the data and attach it to the plot
@@ -42,14 +44,25 @@ Window::Window() : plot( QString("Example Plot") ), gain(5), count(0) // <-- 'c+
 	hLayout.addWidget(&plot);
 
 	setLayout(&hLayout);
+
+	// Initilise ADC
+	adc_init();
+
+	// Initialise LED display
+	led_init(800, 2400);
 }
 
 
 void Window::timerEvent( QTimerEvent * )
 {
-	// generate an sine wave input for example purposes - you must get yours from the A/D!
-	double inVal = gain * sin( M_PI * count/50.0 );
+	double inVal;
+	unsigned short adc_in;
 	++count;
+
+	// Get value from ADC
+	adc_in= adc_read();
+	printf("ADC: %d\n", adc_in);
+	inVal = adc_in*gain;
 
 	// add the new input to the plot
 	memmove( yData, yData+1, (plotDataSize-1) * sizeof(double) );
@@ -57,7 +70,10 @@ void Window::timerEvent( QTimerEvent * )
 	curve.setSamples(xData, yData, plotDataSize);
 	plot.replot();
 
-	// set the thermometer value
+	// Output to the LED Thermometer
+	led_write(adc_in);
+
+	// set the on-screen thermometer value
 	thermo.setValue( inVal + 10 );
 }
 
@@ -68,3 +84,4 @@ void Window::setGain(double gain)
 	// for example purposes just change the amplitude of the generated input
 	this->gain = gain;
 }
+
