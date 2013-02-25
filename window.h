@@ -8,6 +8,8 @@
 
 #include <QBoxLayout>
 
+#include <stdio.h>
+
 // class definition 'Window'
 class Window : public QWidget
 {
@@ -15,7 +17,10 @@ class Window : public QWidget
 	Q_OBJECT
 
 public:
-	Window(); // default constructor - called when a Window is declared without arguments
+	Window(const char *fileName = NULL); 
+	~Window();
+
+
 
 	void timerEvent( QTimerEvent * );
 
@@ -42,6 +47,9 @@ private:
 
 	double gain;
 	int count;
+
+	// File for outputting text data
+	FILE *outFile;
 };
 
 #endif // WINDOW_H

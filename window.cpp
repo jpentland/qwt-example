@@ -1,8 +1,9 @@
 #include "window.h"
 #include "adc.h"
 #include "ledout.h"
+#include <time.h>
 
-Window::Window() 
+Window::Window(const char *fileName) 
 	: plot( QString("Volumeter - Volume Graph")), 
 	  gain(5), 
 	  count(0) 
@@ -50,6 +51,14 @@ Window::Window()
 
 	// Initialise LED display
 	led_init(800, 2400);
+
+	// Open file for output
+	if(fileName != NULL) {
+		outFile = fopen(fileName, "w+");
+	} else {
+
+		outFile = NULL;
+	}
 }
 
 
@@ -75,8 +84,23 @@ void Window::timerEvent( QTimerEvent * )
 
 	// set the on-screen thermometer value
 	thermo.setValue( inVal + 10 );
+
+	// Write to file
+	if(this->outFile != NULL) {
+
+		time_t t = time(NULL);
+
+		fprintf(outFile, "\"%ld\", %f\n", t, inVal);
+
+	}
+
 }
 
+Window::~Window() {
+
+	printf("Closing output file\n");
+	fclose(outFile);
+}
 
 // this function can be used to change the gain of the A/D internal amplifier
 void Window::setGain(double gain)
